@@ -39,7 +39,7 @@ UI.alpha.ui='0.05';
 UI.contrast.ui='[-1,1]'; 
 %UI.design.ui='SchizophreniaExample/designMatrix.txt';
 UI.exchange.ui=''; 
-UI.matrices.ui=control_pd_icd';
+UI.matrices.ui=control_pd_icd;
 %UI.node_coor.ui='SchizophreniaExample/COG.txt';                         
 %UI.node_label.ui='SchizophreniaExample/nodeLabels.txt';
 
