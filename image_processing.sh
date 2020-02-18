@@ -36,7 +36,7 @@ do
     -interp nearestneighbour -dof 6 -out Registrations/Reg_brainMaskonB0/brainMaskonB0
   flirt -in T1/GM_parcellation_85labels.nii.gz -ref DTI/data_preproc_b0.nii.gz -applyxfm -init Registrations/Reg_T1onB0/T1_b0.mat \
     -interp nearestneighbour -dof 6 -out Registrations/Reg_GMonB0/GMonB0
-  # why -interp nearestneighbour?
+  # why -interp nearestneighbour? The main difference is for GM_parcellation_85labels, used in connectome generation. Trilinear = blurred matrix, nearestneighbour = nice isolated sections
 
   echo "Computing CSD and peaks selection.."
   mkdir -p 'Tractography/CSD'
@@ -55,3 +55,7 @@ do
   tck2connectome Tractography/CSD/fibers_det_1000000.tck Registrations/Reg_GMonB0/GMonB0.nii.gz Connectome/${code}_connectome.csv \
     -nthreads 4 -force #assignment_radial_search: default
 done
+
+# If we use trilinear GM interpolation, when we visualize the connectome as a graph we can see that there is something wrong
+# mrconvert -datatype uint32 Registrations/Reg_GMonB0/GMonB0.nii.gz parcInt.nii.gz
+# mrview Registrations/Reg_T1onB0/T1onB0.nii.gz -connectome.init parcInt.nii.gz -connectome.load Connectome/HC_3104_connectome.csv
