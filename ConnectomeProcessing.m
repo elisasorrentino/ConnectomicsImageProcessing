@@ -1,35 +1,118 @@
-%cd into connectomes root directory
+clear
 
-folder_content = dir;
+folder_content = dir("Connectomes/");
 control_index = 1;
 pd_icd_index = 1;
 pd_no_icd_index = 1;
-th = 1;
 
 for i = 1:length(folder_content)
     if startsWith(folder_content(i).name, "HC_")
         temp = load(folder_content(i).folder + "/" + folder_content(i).name + "/Connectome/" + folder_content(i).name + "_connectome.csv");
-        control(:,:,control_index) = temp + temp' - diag(diag(temp)); %#ok<SAGROW>
+        control(:,:,control_index) = temp + temp' - diag(diag(temp));
         control_index = control_index + 1;
     elseif startsWith(folder_content(i).name, "PD_ICD")
         temp = load(folder_content(i).folder + "/" + folder_content(i).name + "/Connectome/" + folder_content(i).name + "_connectome.csv");
-        pd_icd(:,:,pd_icd_index) = temp + temp' - diag(diag(temp)); %#ok<SAGROW>
+        pd_icd(:,:,pd_icd_index) = temp + temp' - diag(diag(temp));
         pd_icd_index = pd_icd_index + 1;
     elseif startsWith(folder_content(i).name, "PD_NO_ICD")
         temp = load(folder_content(i).folder + "/" + folder_content(i).name + "/Connectome/" + folder_content(i).name + "_connectome.csv");
-        pd_no_icd(:,:,pd_no_icd_index) = temp + temp' - diag(diag(temp)); %#ok<SAGROW>
+        pd_no_icd(:,:,pd_no_icd_index) = temp + temp' - diag(diag(temp));
         pd_no_icd_index = pd_no_icd_index + 1;
     end
 end
 
-figure, imagesc(control(:,:,1)), axis equal tight, colorbar;
-figure, imagesc(pd_icd(:,:,1)), axis equal tight, colorbar;
-figure, imagesc(pd_no_icd(:,:,1)), axis equal tight, colorbar;
-
-control_pd_icd = cat(3,control,pd_icd);
-control_pd_no_icd = cat(3,control,pd_no_icd);
+%figure, imagesc(control(:,:,1)), axis equal tight, colorbar;
+%figure, imagesc(pd_icd(:,:,1)), axis equal tight, colorbar;
+%figure, imagesc(pd_no_icd(:,:,1)), axis equal tight, colorbar;
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Edge level statistics
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+th = 0;
+nc = size(control,3);
+group_presence = sum(control > th,3) / nc;
+
+for i = 1:size(group_presence,1)
+    for j = 1:size(group_presence,2)
+        if group_presence(i,j) < 0.7
+            control(i,j,:) = 0;
+        end
+    end
+end
+
+
+npi = size(pd_icd,3);
+group_presence = sum(pd_icd > th,3) / npi;
+
+for i = 1:size(group_presence,1)
+    for j = 1:size(group_presence,2)
+        if group_presence(i,j) < 0.7
+            pd_icd(i,j,:) = 0;
+        end
+    end
+end
+
+
+npni = size(pd_no_icd,3);
+group_presence = sum(pd_no_icd > th,3) / npni;
+
+for i = 1:size(group_presence,1)
+    for j = 1:size(group_presence,2)
+        if group_presence(i,j) < 0.7
+            pd_no_icd(i,j,:) = 0;
+        end
+    end
+end
+
+control_pd_icd_stat_differences = [];
+control_pd_no_icd_stat_differences = [];
+% Differences between (controls and pd_icd) and (controls and pd_no_icd)
+for i = 1:size(control,1)
+    for j = 1:size(control,2)
+        % Test only the lower triangular
+        if j <= i
+            a = squeeze(control(i,j,:));
+            b = squeeze(pd_icd(i,j,:));
+            c = squeeze(pd_no_icd(i,j,:));
+            % is the connection in pc_icd weaker than in control?
+            [H1,P1] = ttest2(a,b,'tail','right');
+            if H1 == 1
+                control_pd_icd_stat_differences = [control_pd_icd_stat_differences;[i,j,P1]];
+            end
+            % is the connection in pc_no_icd weaker than in control?
+            [H2,P2] = ttest2(a,c,'tail','right');
+            if H2 == 1
+                control_pd_no_icd_stat_differences = [control_pd_no_icd_stat_differences;[i,j,P2]];
+            end
+        end
+    end
+end
+
+% Number of comparisons
+bonf_coefficient = ((size(control,1)*size(control,1))-size(control,1))/2 - size(control,1);
+control_pd_icd_stat_differences_bonf = [];
+control_pd_no_icd_stat_differences_bonf = [];
+for i = 1:size(control_pd_icd_stat_differences,1)
+    if control_pd_icd_stat_differences(i,3) < 0.05/bonf_coefficient
+        control_pd_icd_stat_differences_bonf = [control_pd_icd_stat_differences_bonf;[control_pd_icd_stat_differences(i,:)]];
+    end
+end
+
+for i = 1:size(control_pd_no_icd_stat_differences,1)
+    if control_pd_no_icd_stat_differences(i,3) < 0.05/bonf_coefficient
+        control_pd_no_icd_stat_differences_bonf = [control_pd_no_icd_stat_differences_bonf;[control_pd_no_icd_stat_differences(i,:)]];
+    end
+end
+
+% None of the edges seems to survive bonferroni correction :(
+
+
+
+%%%%%%%%%%%
+% NBS
+%%%%%%%%%%%
 UI.method.ui='Run NBS'; 
 UI.test.ui='t-test';
 UI.size.ui='Extent';
@@ -46,6 +129,3 @@ UI.matrices.ui=control_pd_icd;
 %NBSrun(UI,[])...
 %global nbs
 %explore nbs structure..
-
-
-
