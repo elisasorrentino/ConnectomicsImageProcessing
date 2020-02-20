@@ -5,6 +5,7 @@ control_index = 1;
 pd_icd_index = 1;
 pd_no_icd_index = 1;
 
+%setti a 0 tutte le connessioni che non sopravvivono alla treshold
 for i = 1:length(folder_content)
     if startsWith(folder_content(i).name, "HC_")
         temp = load(folder_content(i).folder + "/" + folder_content(i).name + "/Connectome/" + folder_content(i).name + "_connectome.csv");
@@ -32,7 +33,7 @@ end
 
 th = 0;
 nc = size(control,3);
-group_presence = sum(control > th,3) / nc;
+group_presence = sum(control > th,3) / nc; %ritorna la percentuale di soggetti che hanno la connessione
 
 for i = 1:size(group_presence,1)
     for j = 1:size(group_presence,2)
@@ -73,12 +74,12 @@ for i = 1:size(control,1)
     for j = 1:size(control,2)
         % Test only the lower triangular
         if j <= i
-            a = squeeze(control(i,j,:));
+            a = squeeze(control(i,j,:)); %array dei valori di tutti i pazienti della connessione dal nodo i al nodo j
             b = squeeze(pd_icd(i,j,:));
             c = squeeze(pd_no_icd(i,j,:));
             % is the connection in pc_icd weaker than in control?
-            [H1,P1] = ttest2(a,b,'tail','right');
-            if H1 == 1
+            [H1,P1] = ttest2(a,b,'tail','right');%controllo più forte dei casi? P1 pvalue
+            if H1 == 1 % se rifiuto H0 (che è i casi sono più forti o uguali dei controlli)
                 control_pd_icd_stat_differences = [control_pd_icd_stat_differences;[i,j,P1]];
             end
             % is the connection in pc_no_icd weaker than in control?
@@ -91,7 +92,7 @@ for i = 1:size(control,1)
 end
 
 % Number of comparisons
-bonf_coefficient = ((size(control,1)*size(control,1))-size(control,1))/2 - size(control,1);
+bonf_coefficient = ((size(control,1)*size(control,1))-size(control,1))/2 + size(control,1); %quantità di test che ho fatto, mi serve per bonferroni
 control_pd_icd_stat_differences_bonf = [];
 control_pd_no_icd_stat_differences_bonf = [];
 for i = 1:size(control_pd_icd_stat_differences,1)
