@@ -35,6 +35,7 @@ th = 0;
 nc = size(control,3);
 group_presence = sum(control > th,3) / nc; %ritorna la percentuale di soggetti che hanno la connessione
 
+%Vi suggerisco di iniziare con un threshold del 70% e verificare che per tale threshold tutti i nodi rimangano connessi. Se cosi non fosse, sarà necessario scegliere un threshold più basso.
 for i = 1:size(group_presence,1)
     for j = 1:size(group_presence,2)
         if group_presence(i,j) < 0.7
@@ -114,19 +115,30 @@ end
 %%%%%%%%%%%
 % NBS
 %%%%%%%%%%%
+
+control_pd_icd=cat(3, control, pd_icd);
+control_pd_no_icd=cat(3, control, pd_no_icd);
+
+%save("matrices/control_pd_icd.mat","control_pd_icd")
+%save("matrices/control_pd_no_icd.mat","control_pd_no_icd")
+
 UI.method.ui='Run NBS'; 
 UI.test.ui='t-test';
 UI.size.ui='Extent';
 UI.thresh.ui='3.1';
 UI.perms.ui='5000';
 UI.alpha.ui='0.05';
-UI.contrast.ui='[-1,1]'; 
+UI.contrast.ui='[1,-1]'; 
 %UI.design.ui='SchizophreniaExample/designMatrix.txt';
+UI.design.ui='designMatrix.txt';
 UI.exchange.ui=''; 
-UI.matrices.ui=control_pd_icd;
+UI.matrices.ui='matrices/control_pd_icd.mat';
+UI.node_coor.ui='';
+UI.node_label.ui='';
 %UI.node_coor.ui='SchizophreniaExample/COG.txt';                         
 %UI.node_label.ui='SchizophreniaExample/nodeLabels.txt';
 
-%NBSrun(UI,[])...
-%global nbs
+NBSrun(UI,[])
+
+global nbs
 %explore nbs structure..
