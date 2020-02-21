@@ -189,14 +189,14 @@ UI.thresh.ui='3.1';
 UI.perms.ui='5000';
 UI.alpha.ui='0.05';
 UI.contrast.ui='[1,-1]'; 
-%UI.design.ui='SchizophreniaExample/designMatrix.txt';
+UI.design.ui='designMatrix.txt';
 UI.design.ui='designMatrix.txt';
 UI.exchange.ui=''; 
 UI.matrices.ui='matrices/control_pd_icd.mat';
 UI.node_coor.ui='';
 UI.node_label.ui='';
-%UI.node_coor.ui='SchizophreniaExample/COG.txt';                         
-%UI.node_label.ui='SchizophreniaExample/nodeLabels.txt';
+UI.node_coor.ui='COG.txt';                         
+UI.node_label.ui='LABELS.txt';
 
 NBSrun(UI,[])
 
