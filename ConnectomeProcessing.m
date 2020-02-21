@@ -1,4 +1,8 @@
-clear
+clear;
+if exist("./matrices",'dir')
+    rmdir('matrices','s');
+end
+mkdir('matrices');
 
 folder_content = dir("Connectomes/");
 control_index = 1;
@@ -35,24 +39,44 @@ th = 0;
 nc = size(control,3);
 group_presence = sum(control > th,3) / nc; %ritorna la percentuale di soggetti che hanno la connessione
 
-%Vi suggerisco di iniziare con un threshold del 70% e verificare che per tale threshold tutti i nodi rimangano connessi. Se cosi non fosse, sarà necessario scegliere un threshold più basso.
-for i = 1:size(group_presence,1)
-    for j = 1:size(group_presence,2)
-        if group_presence(i,j) < 0.7
-            control(i,j,:) = 0;
+%The treshold used is the maximum one such that all subjects in that group
+%don't increase their connected components
+increased = 0;
+for k = 0.5:0.05:1
+    if ~increased
+       temp = control;
+        for i = 1:size(group_presence,1)
+            for j = 1:size(group_presence,2)
+                if group_presence(i,j) < k
+                    temp(i,j,:) = 0;
+                end
+            end
         end
+        increased = increased_components(control,temp);
+        if ~increased
+            control = temp;
+        end 
     end
 end
-
 
 npi = size(pd_icd,3);
 group_presence = sum(pd_icd > th,3) / npi;
 
-for i = 1:size(group_presence,1)
-    for j = 1:size(group_presence,2)
-        if group_presence(i,j) < 0.7
-            pd_icd(i,j,:) = 0;
+increased = 0;
+for k = 0.5:0.05:1
+    if ~increased
+       temp = pd_icd;
+        for i = 1:size(group_presence,1)
+            for j = 1:size(group_presence,2)
+                if group_presence(i,j) < k
+                    temp(i,j,:) = 0;
+                end
+            end
         end
+        increased = increased_components(pd_icd,temp);
+        if ~increased
+            pd_icd = temp;
+        end 
     end
 end
 
@@ -60,13 +84,24 @@ end
 npni = size(pd_no_icd,3);
 group_presence = sum(pd_no_icd > th,3) / npni;
 
-for i = 1:size(group_presence,1)
-    for j = 1:size(group_presence,2)
-        if group_presence(i,j) < 0.7
-            pd_no_icd(i,j,:) = 0;
+increased = 0;
+for k = 0.5:0.05:1
+    if ~increased
+       temp = pd_no_icd;
+        for i = 1:size(group_presence,1)
+            for j = 1:size(group_presence,2)
+                if group_presence(i,j) < k
+                    temp(i,j,:) = 0;
+                end
+            end
         end
+        increased = increased_components(pd_no_icd,temp);
+        if ~increased
+            pd_no_icd = temp;
+        end 
     end
 end
+
 
 control_pd_icd_stat_differences = [];
 control_pd_no_icd_stat_differences = [];
@@ -79,12 +114,12 @@ for i = 1:size(control,1)
             b = squeeze(pd_icd(i,j,:));
             c = squeeze(pd_no_icd(i,j,:));
             % is the connection in pc_icd weaker than in control?
-            [H1,P1] = ttest2(a,b,'tail','right');%controllo più forte dei casi? P1 pvalue
-            if H1 == 1 % se rifiuto H0 (che è i casi sono più forti o uguali dei controlli)
+            [H1,P1] = ttest2(a,b,'tail','both');%controllo piï¿½ forte dei casi? P1 pvalue
+            if H1 == 1 % se rifiuto H0 (che ï¿½ i casi sono piï¿½ forti o uguali dei controlli)
                 control_pd_icd_stat_differences = [control_pd_icd_stat_differences;[i,j,P1]];
             end
             % is the connection in pc_no_icd weaker than in control?
-            [H2,P2] = ttest2(a,c,'tail','right');
+            [H2,P2] = ttest2(a,c,'tail','both');
             if H2 == 1
                 control_pd_no_icd_stat_differences = [control_pd_no_icd_stat_differences;[i,j,P2]];
             end
@@ -92,23 +127,48 @@ for i = 1:size(control,1)
     end
 end
 
+%Visualize connections that pass the first statistical test
+visualize_pd_icd = zeros(size(control,1),size(control,1));
+for i = 1:length(control_pd_icd_stat_differences)
+    visualize_pd_icd(control_pd_icd_stat_differences(i,1),control_pd_icd_stat_differences(i,2)) = 1;
+end
+figure, imagesc(visualize_pd_icd + visualize_pd_icd' -diag(diag(visualize_pd_icd))), axis equal tight;
+
+%Visualize connections that pass the second statistical test with
+%bonferroni correction of p-value threshold
+visualize_pd_no_icd = zeros(size(control,1),size(control,1));
+for i = 1:length(control_pd_no_icd_stat_differences)
+    visualize_pd_no_icd(control_pd_no_icd_stat_differences(i,1),control_pd_no_icd_stat_differences(i,2)) = 1;
+end
+figure, imagesc(visualize_pd_no_icd + visualize_pd_no_icd' - diag(diag(visualize_pd_no_icd))), axis equal tight;
+
 % Number of comparisons
-bonf_coefficient = ((size(control,1)*size(control,1))-size(control,1))/2 + size(control,1); %quantità di test che ho fatto, mi serve per bonferroni
+n_comp = ((size(control,1)*size(control,1))-size(control,1))/2 + size(control,1); %quantitï¿½ di test che ho fatto, mi serve per bonferroni
 control_pd_icd_stat_differences_bonf = [];
 control_pd_no_icd_stat_differences_bonf = [];
 for i = 1:size(control_pd_icd_stat_differences,1)
-    if control_pd_icd_stat_differences(i,3) < 0.05/bonf_coefficient
+    if control_pd_icd_stat_differences(i,3) < 0.05/n_comp
         control_pd_icd_stat_differences_bonf = [control_pd_icd_stat_differences_bonf;[control_pd_icd_stat_differences(i,:)]];
     end
 end
 
 for i = 1:size(control_pd_no_icd_stat_differences,1)
-    if control_pd_no_icd_stat_differences(i,3) < 0.05/bonf_coefficient
+    if control_pd_no_icd_stat_differences(i,3) < 0.05/n_comp
         control_pd_no_icd_stat_differences_bonf = [control_pd_no_icd_stat_differences_bonf;[control_pd_no_icd_stat_differences(i,:)]];
     end
 end
 
-% None of the edges seems to survive bonferroni correction :(
+visualize_pd_icd_bonf = zeros(size(control,1),size(control,1));
+visualize_pd_no_icd_bonf = zeros(size(control,1),size(control,1));
+for i = 1:length(control_pd_icd_stat_differences_bonf)
+    visualize_pd_icd_bonf(control_pd_icd_stat_differences_bonf(i,1),control_pd_icd_stat_differences_bonf(i,2)) = 1;
+end
+for i = 1:length(control_pd_no_icd_stat_differences_bonf)
+    visualize_pd_no_icd_bonf(control_pd_no_icd_stat_differences_bonf(i,1),control_pd_no_icd_stat_differences_bonf(i,2)) = 1;
+end
+figure, imagesc(visualize_pd_icd_bonf + visualize_pd_icd_bonf' -diag(diag(visualize_pd_icd_bonf))), axis equal tight;
+figure, imagesc(visualize_pd_no_icd_bonf + visualize_pd_no_icd_bonf' - diag(diag(visualize_pd_no_icd_bonf))), axis equal tight;
+
 
 
 
@@ -119,8 +179,8 @@ end
 control_pd_icd=cat(3, control, pd_icd);
 control_pd_no_icd=cat(3, control, pd_no_icd);
 
-%save("matrices/control_pd_icd.mat","control_pd_icd")
-%save("matrices/control_pd_no_icd.mat","control_pd_no_icd")
+save("matrices/control_pd_icd.mat","control_pd_icd")
+save("matrices/control_pd_no_icd.mat","control_pd_no_icd")
 
 UI.method.ui='Run NBS'; 
 UI.test.ui='t-test';
@@ -142,3 +202,17 @@ NBSrun(UI,[])
 
 global nbs
 %explore nbs structure..
+
+
+
+function increased = increased_components(before,after)
+    components_before = [];
+    components_after = [];
+    for i = 1:size(before,3)
+       c = length(unique(conncomp(graph(before(:,:,i)))));
+       components_before = [components_before, c];
+       c = length(unique(conncomp(graph(after(:,:,i)))));
+       components_after = [components_after, c];
+    end
+    increased = sum(components_after > components_before) > 0;
+end
