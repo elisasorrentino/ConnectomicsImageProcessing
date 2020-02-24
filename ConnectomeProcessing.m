@@ -160,10 +160,10 @@ end
 
 visualize_pd_icd_bonf = zeros(size(control,1),size(control,1));
 visualize_pd_no_icd_bonf = zeros(size(control,1),size(control,1));
-for i = 1:length(control_pd_icd_stat_differences_bonf)
+for i = 1:size(control_pd_icd_stat_differences_bonf,1)
     visualize_pd_icd_bonf(control_pd_icd_stat_differences_bonf(i,1),control_pd_icd_stat_differences_bonf(i,2)) = 1;
 end
-for i = 1:length(control_pd_no_icd_stat_differences_bonf)
+for i = 1:size(control_pd_no_icd_stat_differences_bonf,1)
     visualize_pd_no_icd_bonf(control_pd_no_icd_stat_differences_bonf(i,1),control_pd_no_icd_stat_differences_bonf(i,2)) = 1;
 end
 figure, imagesc(visualize_pd_icd_bonf + visualize_pd_icd_bonf' -diag(diag(visualize_pd_icd_bonf))), axis equal tight;
