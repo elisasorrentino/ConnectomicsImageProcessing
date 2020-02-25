@@ -132,7 +132,7 @@ visualize_pd_icd = zeros(size(control,1),size(control,1));
 for i = 1:length(control_pd_icd_stat_differences)
     visualize_pd_icd(control_pd_icd_stat_differences(i,1),control_pd_icd_stat_differences(i,2)) = 1;
 end
-figure, imagesc(visualize_pd_icd + visualize_pd_icd' -diag(diag(visualize_pd_icd))), axis equal tight;
+figure, imagesc(visualize_pd_icd + visualize_pd_icd' -diag(diag(visualize_pd_icd))), axis equal tight, colorbar;
 
 %Visualize connections that pass the second statistical test with
 %bonferroni correction of p-value threshold
@@ -140,7 +140,7 @@ visualize_pd_no_icd = zeros(size(control,1),size(control,1));
 for i = 1:length(control_pd_no_icd_stat_differences)
     visualize_pd_no_icd(control_pd_no_icd_stat_differences(i,1),control_pd_no_icd_stat_differences(i,2)) = 1;
 end
-figure, imagesc(visualize_pd_no_icd + visualize_pd_no_icd' - diag(diag(visualize_pd_no_icd))), axis equal tight;
+figure, imagesc(visualize_pd_no_icd + visualize_pd_no_icd' - diag(diag(visualize_pd_no_icd))), axis equal tight, colorbar;
 
 % Number of comparisons
 n_comp = ((size(control,1)*size(control,1))-size(control,1))/2 + size(control,1); %quantit� di test che ho fatto, mi serve per bonferroni
@@ -166,8 +166,8 @@ end
 for i = 1:size(control_pd_no_icd_stat_differences_bonf,1)
     visualize_pd_no_icd_bonf(control_pd_no_icd_stat_differences_bonf(i,1),control_pd_no_icd_stat_differences_bonf(i,2)) = 1;
 end
-figure, imagesc(visualize_pd_icd_bonf + visualize_pd_icd_bonf' -diag(diag(visualize_pd_icd_bonf))), axis equal tight;
-figure, imagesc(visualize_pd_no_icd_bonf + visualize_pd_no_icd_bonf' - diag(diag(visualize_pd_no_icd_bonf))), axis equal tight;
+figure, imagesc(visualize_pd_icd_bonf + visualize_pd_icd_bonf' -diag(diag(visualize_pd_icd_bonf))), axis equal tight, colorbar;
+figure, imagesc(visualize_pd_no_icd_bonf + visualize_pd_no_icd_bonf' - diag(diag(visualize_pd_no_icd_bonf))), axis equal tight, colorbar;
 
 
 
