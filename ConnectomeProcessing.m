@@ -203,11 +203,16 @@ global nbs
 %explore nbs structure..
 
 
-
+% increased_components has a boolean return type, true if "afte"r has more
+% component than "before", false otherwise
 function increased = increased_components(before,after)
     components_before = [];
     components_after = [];
     for i = 1:size(before,3)
+       % conncomp returns, for each node of the graph, an index
+       % corresponding to the component it belongs to. 
+       % unique(conncomp(graph.. returns the indexes of all components in
+       % the graph
        c = length(unique(conncomp(graph(before(:,:,i)))));
        components_before = [components_before, c];
        c = length(unique(conncomp(graph(after(:,:,i)))));
