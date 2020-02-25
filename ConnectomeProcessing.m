@@ -190,7 +190,6 @@ UI.perms.ui='5000';
 UI.alpha.ui='0.05';
 UI.contrast.ui='[1,-1]'; 
 UI.design.ui='designMatrix.txt';
-UI.design.ui='designMatrix.txt';
 UI.exchange.ui=''; 
 UI.matrices.ui='matrices/control_pd_icd.mat';
 UI.node_coor.ui='';
