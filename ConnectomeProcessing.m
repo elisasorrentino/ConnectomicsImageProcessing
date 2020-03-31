@@ -192,8 +192,6 @@ UI.contrast.ui='[1,-1]';
 UI.design.ui='designMatrix.txt';
 UI.exchange.ui=''; 
 UI.matrices.ui='matrices/control_pd_icd.mat';
-UI.node_coor.ui='';
-UI.node_label.ui='';
 UI.node_coor.ui='COG.txt';                         
 UI.node_label.ui='LABELS.txt';
 
